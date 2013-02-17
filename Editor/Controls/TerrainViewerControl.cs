@@ -22,40 +22,41 @@ namespace AweEditor
     /// a voxel terrain. The main form class is responsible for loading
     /// the terrain: this control just displays it.
     /// </summary>
-    class TerrainViewerControl : GraphicsDeviceControl
-    {
-        /// <summary>
-        /// Gets or sets the current voxel terrain.
-        /// </summary>
-        public VoxelTerrain VoxelTerrain
-        {
-            get { return voxelTerrain; }
-            set { voxelTerrain = value; }
-        }
+	class TerrainViewerControl : GraphicsDeviceControl
+	{
+		/// <summary>
+		/// Gets or sets the current voxel terrain.
+		/// </summary>
+		public VoxelTerrain VoxelTerrain
+		{
+			get { return voxelTerrain; }
+			set { voxelTerrain = value; }
+		}
 
-        VoxelTerrain voxelTerrain;
-
-
-        /// <summary>
-        /// Initializes the control.
-        /// </summary>
-        protected override void Initialize()
-        {
-            // Hook the idle event to constantly redraw our animation.
-            Application.Idle += delegate { Invalidate(); };
-        }
+		VoxelTerrain voxelTerrain;
 
 
-        /// <summary>
-        /// Draws the control.
-        /// </summary>
-        protected override void Draw()
-        {
-            // Clear to the default control background color.
-            Color backColor = new Color(BackColor.R, BackColor.G, BackColor.B);
 
-            GraphicsDevice.Clear(backColor);
-        }
 
-    }
+		/// <summary>
+		/// Initializes the control.
+		/// </summary>
+		protected override void Initialize()
+		{
+			// Hook the idle event to constantly redraw our animation.
+			Application.Idle += delegate { Invalidate(); };
+		}
+
+
+		/// <summary>
+		/// Draws the control.
+		/// </summary>
+		protected override void Draw()
+		{
+			// Clear to the default control background color.
+			Color backColor = new Color(BackColor.R, BackColor.G, BackColor.B);
+
+			GraphicsDevice.Clear(backColor);
+		}
+	}
 }
