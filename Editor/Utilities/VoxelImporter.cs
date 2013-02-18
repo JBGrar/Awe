@@ -311,6 +311,5 @@ namespace AweEditor.Utilities
 
 			return false;
 		}
-
 	}
 }
