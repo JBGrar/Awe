@@ -11,19 +11,22 @@ namespace AweEditor
 	{
 		const int CHUNK_DEFLATE_MAX = 1024 * 64;
 		const int CHUNK_INFLATE_MAX = 1024 * 128;
-
-		private VoxelTerrain ImportRegion(string fileName)
+		int initialOffset;
+		public VoxelTerrain ImportRegion(string fileName)
 		{
 			byte[] fileBuffer = File.ReadAllBytes(fileName);
 			BlockType[] blocks;
+			VoxelTerrain vt = new VoxelTerrain();
 			for (int x = 0; x < 32; x++)
 			{
 				for (int z = 0; z < 32; z++)
 				{
 					blocks = new BlockType[65536];
+					if(GetChunk(fileBuffer, blocks, x, z))
+						vt.AddChunk(x, z, blocks);
 				}
 			}
-			return null;
+			return vt;
 		}
 
 		private bool GetChunk(byte[] buff, BlockType[] blocks,int cx,int cz)
@@ -60,15 +63,15 @@ namespace AweEditor
 
 			if((chunkLength>sectorNumber*4096)||(chunkLength>CHUNK_DEFLATE_MAX))
 				return false;
-			input = new byte[chunkLength];
-			Array.Copy(buff,position,input,0,chunkLength-1);
-			output=new byte[chunkLength];
+			input = new byte[CHUNK_DEFLATE_MAX];
+			Array.Copy(buff,position+2,input,0,chunkLength-6);
+			output = new byte[CHUNK_INFLATE_MAX];
 			DeflateStream dfs = new DeflateStream(new MemoryStream(input), CompressionMode.Decompress);
 			dfs.Flush();
-			dfs.Read(output,0,chunkLength);
+			dfs.Read(output,0,input.Length);
 			
 
-			return GetBlocks(buff,blocks);
+			return GetBlocks(output,blocks);
 		}
 
 		/// <summary>
@@ -81,7 +84,7 @@ namespace AweEditor
 		{
 			int length, found, nsections, position;
 
-			position = 1;
+			position = 0;
 			length = ReadWord(buff, position);
 			position += length;
 
@@ -336,6 +339,8 @@ namespace AweEditor
 			byte type;
 			while (true)
 			{
+				if (position > buff.Length)
+					return 0;
 				type = 0;
 				type = buff[position];
 				position++;

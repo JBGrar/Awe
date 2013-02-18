@@ -28,7 +28,7 @@ namespace AweEditor
     {
         ContentBuilder contentBuilder;
         ContentManager contentManager;
-
+		VoxelImporter voxelImporter;
 
         /// <summary>
         /// Constructs the main form.
@@ -41,7 +41,7 @@ namespace AweEditor
 
             contentManager = new ContentManager(modelViewerControl.Services,
                                                 contentBuilder.OutputDirectory);
-
+			voxelImporter = new VoxelImporter();
             /// Automatically bring up the "Load Model" dialog when we are first shown.
             ///this.Shown += OpenMenuClicked;
         }
@@ -90,11 +90,59 @@ namespace AweEditor
         /// <summary>
         /// Loads a new minecraft terrain file into the TerrainViewerControl.
         /// </summary>
-        private void ImportVoxelTerrainMenuClicked(object sender, EventArgs e)
-        {
-            // TODO: Import the file
-        }
+		private void ImportVoxelTerrainMenuClicked(object sender, EventArgs e)
+		{
+			OpenFileDialog fileDialog = new OpenFileDialog();
 
+			fileDialog.InitialDirectory = ContentPath();
+
+			fileDialog.Title = "Load Model";
+
+			fileDialog.Filter = "Model Files (*.fbx;*.x)|*.fbx;*.x|" +
+								"FBX Files (*.fbx)|*.fbx|" +
+								"X Files (*.x)|*.x|" +
+								"All Files (*.*)|*.*";
+			if (fileDialog.ShowDialog() == DialogResult.OK)
+			{
+				string modelfileName = fileDialog.FileName;
+
+				fileDialog.Title = "Load Voxel Terrain";
+				fileDialog.Filter = "Region Files (*.mca;*.x)|*.mca;*.x|" +
+									   "All Files (*.*)|*.*";
+				if (fileDialog.ShowDialog() == DialogResult.OK)
+				{
+					LoadTerrain(fileDialog.FileName, modelfileName);
+				}
+			}
+
+			// TODO: Import the file
+		}
+
+		void LoadTerrain(string filename, string modelName)
+		{
+			Cursor = Cursors.WaitCursor;
+
+			tabControl1.SelectedIndex = 3;
+			//unload old stuff
+			terrainViewerControl.InstancedModel = null;
+			contentManager.Unload();
+
+			contentBuilder.Clear();
+			contentBuilder.Add(modelName, "Model", null, "ModelProcessor");
+
+			string buildError = contentBuilder.Build();
+			if (string.IsNullOrEmpty(buildError))
+			{
+				terrainViewerControl.InstancedModel = contentManager.Load<Model>("Model");
+			}
+			else
+			{
+				MessageBox.Show(buildError, "Error");
+			}
+			terrainViewerControl.VoxelTerrain = voxelImporter.ImportRegion(filename);
+
+			Cursor = Cursors.Arrow;
+		}
 
         /// <summary>
         /// Loads a new 3D model file into the ModelViewerControl.
@@ -174,7 +222,8 @@ namespace AweEditor
             {
                 // If the build succeeded, use the ContentManager to
                 // load the temporary .xnb file that we just created.
-                textureViewerControl.Texture = contentManager.Load<Texture2D>("Texture");
+                
+				textureViewerControl.Texture = contentManager.Load<Texture2D>("Texture");
             }
             else
             {
