@@ -138,23 +138,178 @@ namespace AweEditor.Utilities
 			return true;
 		}
 
+
 		private int ReadWord(MemoryStream bf)
 		{
-			throw new NotImplementedException();
+			byte[] buf = new byte[2];
+			bf.Read(buf, 0, 2);
+			return ((buf[0] << 8) | buf[1]);
 		}
+
 		private int ReadDWord(MemoryStream bf)
 		{
-			throw new NotImplementedException();
+			byte[] buf = new byte[4];
+			bf.Read(buf, 0, 4);
+			return ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]);
 		}
-		private int FindElement(MemoryStream bf, string p)
+
+		private int FindElement(MemoryStream bf, string name)
 		{
-			throw new NotImplementedException();
+			while (true)
+			{
+				byte[] type = new byte[1];
+				bf.Read(type, 0, 1);
+				if (type[0] == 0)
+					return 0;
+
+				if (Compare(bf, name))
+					return type[0];
+				SkipType(bf, type[0]);
+			}
 		}
 
 
 		private void SkipType(MemoryStream bf, byte type)
 		{
-			throw new NotImplementedException();
+			int length;
+			switch (type)
+			{
+				case 1: //byte
+					bf.Seek(1, SeekOrigin.Current);
+					break;
+				case 2: // short
+					bf.Seek(2, SeekOrigin.Current);
+					break;
+				case 3: // int
+					bf.Seek(4, SeekOrigin.Current);
+					break;
+				case 4: // long
+					bf.Seek(8, SeekOrigin.Current);
+					break;
+				case 5: //float
+					bf.Seek(4, SeekOrigin.Current);
+					break;
+				case 6: //double
+					bf.Seek(8, SeekOrigin.Current);
+					break;
+				case 7: // byte array
+					length = ReadDWord(bf);
+					bf.Seek(length, SeekOrigin.Current);
+					break;
+				case 8://string
+					length = ReadWord(bf);
+					bf.Seek(length, SeekOrigin.Current);
+					break;
+				case 9: //list
+					SkipList(bf);
+					break;
+				case 10: //Compound
+					SkipCompound(bf);
+					break;
+				case 11: // int Array
+					length = ReadDWord(bf);
+					bf.Seek(length * 4, SeekOrigin.Current);
+					break;
+			}
+		}
+
+
+		private void SkipList(MemoryStream bf)
+		{
+			int length;
+			byte[] type = new byte[1];
+			bf.Read(type, 0, 1);
+			length = ReadDWord(bf);
+			switch (type[0])
+			{
+				case 1: //byte
+					bf.Seek(length, SeekOrigin.Current);
+					break;
+				case 2://short
+					bf.Seek(length * 2, SeekOrigin.Current);
+					break;
+				case 3://int
+					bf.Seek(length * 4, SeekOrigin.Current);
+					break;
+				case 4: //long
+					bf.Seek(length * 8, SeekOrigin.Current);
+					break;
+				case 5: //float
+					bf.Seek(length * 4, SeekOrigin.Current);
+					break;
+				case 6: //double
+					bf.Seek(length * 8, SeekOrigin.Current);
+					break;
+				case 7: // byte aray
+					for (int i = 0; i < length; i++)
+					{
+						int slength = ReadDWord(bf);
+						bf.Seek(slength, SeekOrigin.Current);
+					}
+					break;
+				case 8://string
+					for (int i = 0; i < length; i++)
+					{
+						int slength = ReadWord(bf);
+						bf.Seek(slength, SeekOrigin.Current);
+					}
+					break;
+				case 9: //List
+					for (int i = 0; i < length; i++)
+					{
+						SkipList(bf);
+					}
+					break;
+				case 10: //compound
+					for (int i = 0; i < length; i++)
+					{
+						SkipCompound(bf);
+					}
+					break;
+				case 11: //int array
+					for (int i = 0; i < length; i++)
+					{
+						int slength = ReadDWord(bf);
+						bf.Seek(slength * 4, SeekOrigin.Current);
+					}
+					break;
+			}
+		}
+
+		private void SkipCompound(MemoryStream bf)
+		{
+			int length;
+			byte[] type = new byte[1];
+			do
+			{
+				bf.Read(type, 0, 1);
+				if (type[0] != 0)
+				{
+					length = ReadWord(bf);
+					bf.Seek(length, SeekOrigin.Current);
+					SkipType(bf, type[0]);
+				}
+			} while (type[0] != 0);
+		}
+
+		private bool Compare(MemoryStream bf, string name)
+		{
+			int length = ReadWord(bf);
+
+			byte[] nameB = new byte[length + 1];
+			bf.Read(nameB, 0, length);
+			nameB[length] = 0;
+			char[] temp = new char[length + 1];
+			for (int i = 0; i < temp.Length; i++)
+			{
+				temp[i] = (char)nameB[i];
+			}
+
+			string thisName = new string(temp);
+			if (string.Compare(thisName, name) == 0)
+				return true;
+
+			return false;
 		}
 
 	}
