@@ -52,9 +52,110 @@ namespace AweEditor.Utilities
 			
 		}
 
-		private bool GetBlocks(MemoryStream memoryStream, byte[] blockData)
+		private bool GetBlocks(MemoryStream bf, byte[] buff)
+		{
+			int length, found, nsections;
+
+			bf.Seek(1, SeekOrigin.Current);
+			length = ReadWord(bf);
+			bf.Seek(length, SeekOrigin.Current);
+
+			if (FindElement(bf, "Level") != 10)
+				return false;
+
+			if(FindElement(bf, "Biomes")!=7)
+				return false;
+
+			//skip biome data
+			bf.Seek(4,SeekOrigin.Current);
+			bf.Seek(16*16,SeekOrigin.Current);
+
+			if (FindElement(bf, "Sections") != 9)
+				return false;
+			{
+				byte[] type = new byte[1];
+				bf.Read(type, 0, 1);
+
+				if (type[0] != 10)
+					return false;
+			}
+
+			nsections = ReadDWord(bf);
+			while ((nsections) > 0)
+			{
+				byte[] y = new byte[1];
+				long save = bf.Position;
+
+				if (FindElement(bf, "Y") != 1)
+					return false;
+
+				bf.Read(y, 0, 1);
+				bf.Seek(save, SeekOrigin.Begin);
+
+				found = 0;
+
+				while (true)
+				{
+					bool ret = false;
+					byte[] type = new byte[1];
+					bf.Read(type, 0, 1);
+					if (type[0] == 0)
+						break;
+					length = ReadWord(bf);
+
+					byte[] name = new byte[length + 1];
+					bf.Read(name, 0, length);
+					name[length] = 0;
+					char[] temp = new char[length + 1];
+					for (int i = 0; i < temp.Length; i++)
+					{
+						temp[i] = (char)name[i];
+					}
+
+					string thisName = new string(temp);
+
+					if (string.Compare(thisName, "BlockLight") == 0)
+					{
+						found++;
+						ret = true;
+						length = ReadDWord(bf);
+						bf.Seek(length, SeekOrigin.Current);
+					}
+					if (string.Compare(thisName, "Blocks") == 0)
+					{
+						found++;
+						ret = true;
+						length = ReadDWord(bf);
+						bf.Read(buff, 16 * 16 * 16 * y[0], length);
+					}
+
+					if (!ret)
+						SkipType(bf, type[0]);
+				}
+
+				nsections--;
+			}
+			return true;
+		}
+
+		private int ReadWord(MemoryStream bf)
 		{
 			throw new NotImplementedException();
 		}
+		private int ReadDWord(MemoryStream bf)
+		{
+			throw new NotImplementedException();
+		}
+		private int FindElement(MemoryStream bf, string p)
+		{
+			throw new NotImplementedException();
+		}
+
+
+		private void SkipType(MemoryStream bf, byte type)
+		{
+			throw new NotImplementedException();
+		}
+
 	}
 }
