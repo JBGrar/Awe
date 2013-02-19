@@ -13,6 +13,37 @@ namespace AweEditor
     {
         Air = 0,
         Stone = 1,
+		GrassBlock =2,
+		Dirt= 3,
+		Cobblestone = 4,
+		WoodenPlanks=5,
+		Bedrock=7,
+		Water=8,
+		StationaryWater=9,
+		Lava=10,
+		StationaryLava=11,
+		Sand=12,
+		Gravel=13,
+		Wood=17,
+		Leaves=18,
+		Glass=20,
+		Sandstone=24,
+		Wool=35,
+		Bricks=45,
+		MossStone=48,
+		Obsidian=49,
+		Ice = 79,
+		SnowBlock =80,
+		Cactus=81,
+		ClayBlock=82,
+		Pumpkin=86,
+		Netherrack=87,
+		SoulSand=88,
+		GlowstoneBlock=89,
+		StoneBricks=98,
+		Mycellium = 110,
+		NetherBrick=112,
+
         // TODO: Implement remaining block types
     }
 
@@ -34,6 +65,11 @@ namespace AweEditor
 		public VoxelTerrain()
 		{
 			_chunks = new VoxelChunk[32, 32];
+		}
+
+		public void AddChunk(byte[] buffer,int cx,int cz)
+		{
+			_chunks[cx, cz] = new VoxelChunk(buffer);
 		}
 
 		public VoxelChunk GetChunk(int x, int z)
@@ -104,7 +140,7 @@ namespace AweEditor
 			_blocks = new BlockType[256, 16, 16];
 		}
 
-		public VoxelChunk(BlockType[] blockData)
+		public VoxelChunk(byte[] blockData)
 		{
 			_blocks = new BlockType[256, 16, 16];
 			for (int y = 0; y < 256; y++)
@@ -113,7 +149,7 @@ namespace AweEditor
 				{
 					for (int x = 0; x < 16; x++)
 					{
-						_blocks[y,z,x] = blockData[(y*16*16)+(z*16)+x];
+						_blocks[y,z,x] = (BlockType) blockData[(y*16*16)+(z*16)+x];
 					}
 				}
 			}

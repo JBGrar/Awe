@@ -20,8 +20,8 @@ namespace AweEditor
 
 				int sectorNumber, offset, chunkLength;
 
-				input = new byte[CHUNK_DEFAULT_MAX];
-				output = new byte[CHUNK_DEFAULT_MAX];
+				//input = new byte[CHUNK_DEFAULT_MAX];
+				//output = new byte[CHUNK_DEFAULT_MAX];
 				fs.Seek(4 * ((cx & 31) + (cz & 31) * 32), SeekOrigin.Begin);
 				fs.Read(buff, 0, 4);
 
@@ -39,10 +39,12 @@ namespace AweEditor
 				
 				if((chunkLength>sectorNumber*4096)||(chunkLength>CHUNK_DEFAULT_MAX))
 					return false;
-
-				if(fs.Read(input,0,chunkLength-1)==0)
+				input = new byte[chunkLength - 6];
+				fs.Seek(2, SeekOrigin.Current);
+				if(fs.Read(input,0,chunkLength-6)==0)
 					return false;
 
+				output = new byte[chunkLength];
 				DeflateStream dfs = new DeflateStream(new MemoryStream(input),
 													CompressionMode.Decompress);
 				dfs.Flush();

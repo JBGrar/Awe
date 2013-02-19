@@ -119,12 +119,13 @@ namespace AweEditor
 				if (fileDialog.ShowDialog() == DialogResult.OK)
 				{
 					LoadTerrain(fileDialog.FileName, modelName);
+
 				}
 			}
             // TODO: Import the file
         }
 
-		private void LoadTerrain(string terrain, string modelName)
+		private void LoadTerrain(string terrainName, string modelName)
 		{
 			Cursor = Cursors.WaitCursor;
 			tabControl1.SelectedIndex = 3;
@@ -140,10 +141,19 @@ namespace AweEditor
 
 			if (string.IsNullOrEmpty(buildError))
 			{
-				// If the build succeeded, use the ContentManager to
-				// load the temporary .xnb file that we just created.
 				terrainViewerControl.Model = contentManager.Load<Model>("Model");
+				VoxelTerrain temp = new VoxelTerrain();
+				byte[] blocks = new byte[65536];
+				for (int cx = 0; cx < 32; cx++)
+				{
+					for (int cz = 0; cz < 32; cz++)
+					{
+						voxelImporter.GetRegion(terrainName, cx, cz, blocks);
+						temp.AddChunk(blocks, cx, cz);
+					}
+				}
 			}
+			MessageBox.Show("Got chuns");
 			Cursor = Cursors.Arrow;
 			//throw new NotImplementedException();
 		}

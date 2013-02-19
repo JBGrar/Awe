@@ -14,7 +14,8 @@ namespace AweEditor
         float spiralSpeed;
         float spinSpeed;
         Vector3 spinAxis;
-
+		BlockType type;
+		Vector3 position;
         #endregion
 
 
@@ -39,6 +40,13 @@ namespace AweEditor
                 spinAxis = Vector3.Up;
         }
 
+		public BlockInstance(BlockType type, int x, int y, int z):base()
+		{
+			position.X=x;
+			position.Y=y;
+			position.Z=z;
+			this.type=type;
+		}
 
         /// <summary>
         /// Gets a transform matrix describing the
@@ -76,6 +84,7 @@ namespace AweEditor
             transform.M41 = (float)Math.Cos(spiralTime) * spiralSize;
             transform.M42 = (float)Math.Sin(spiralTime) * spiralSize;
             transform.M43 = (float)Math.Sin(spiralTime / 3) * 6;
+			
         }
 
 
