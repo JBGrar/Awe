@@ -45,6 +45,46 @@ namespace AweEditor
 		{
 			return _chunks[cx, cz].GetBlock(x, y, z);
 		}
+
+		public BlockType[,] GetXZPlane(int y)
+		{
+			BlockType[,] plane = new BlockType[32*16,32*16];
+
+			for (int cx = 0; cx < 32; cx++)
+			{
+				for (int cz = 0; cz < 32; cz++)
+				{
+					BlockType[,] temp = _chunks[cx, cz].GetXZSlice(y);
+					for (int x = 0; x < 16; x++)
+					{
+						for (int z = 0; z < 16; z++)
+						{
+							plane[cx*16+x, cz + z] = temp[x, z];
+						}
+					}
+				}
+			}
+			return plane;
+		}
+
+		public BlockType[,] GetXYPlaine(int z)
+		{
+			BlockType[,] plain = new BlockType[16*32,256]; 
+			for (int cx = 0; cx < 32; cx++)
+			{
+				BlockType[,] temp = new BlockType[16, 256];
+				for (int x = 0; x < 16; x++)
+				{
+					for (int y = 0; y < 256; y++)
+					{
+						plain[x + cx*16, y] = temp[x, y];
+					}
+				}
+			}
+			return null;
+		}
+
+
         // TODO: Complete class
     }
 
@@ -73,7 +113,7 @@ namespace AweEditor
 				{
 					for (int x = 0; x < 16; x++)
 					{
-						_blocks[y,z,x] = blockData[(y*16*16)+(z*16)+x)];
+						_blocks[y,z,x] = blockData[(y*16*16)+(z*16)+x];
 					}
 				}
 			}

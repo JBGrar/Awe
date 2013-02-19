@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace AweEditor.Utilities
+namespace AweEditor
 {
 	class VoxelImporter
 	{
@@ -37,7 +37,7 @@ namespace AweEditor.Utilities
 
 				chunkLength = (buff[0]<<24)|(buff[1]<<16)|(buff[2]<<8)|buff[3];
 				
-				if((chunkLength>sectorNumber*4096)||(chunkLength>CHUNK_DEFAULT_MAX)
+				if((chunkLength>sectorNumber*4096)||(chunkLength>CHUNK_DEFAULT_MAX))
 					return false;
 
 				if(fs.Read(input,0,chunkLength-1)==0)
@@ -52,45 +52,45 @@ namespace AweEditor.Utilities
 			
 		}
 
-		private bool GetBlocks(MemoryStream bf, byte[] buff)
+		private bool GetBlocks(MemoryStream stream, byte[] buff)
 		{
 			int length, found, nsections;
 
-			bf.Seek(1, SeekOrigin.Current);
-			length = ReadWord(bf);
-			bf.Seek(length, SeekOrigin.Current);
+			stream.Seek(1, SeekOrigin.Current);
+			length = ReadWord(stream);
+			stream.Seek(length, SeekOrigin.Current);
 
-			if (FindElement(bf, "Level") != 10)
+			if (FindElement(stream, "Level") != 10)
 				return false;
 
-			if(FindElement(bf, "Biomes")!=7)
+			if(FindElement(stream, "Biomes")!=7)
 				return false;
 
 			//skip biome data
-			bf.Seek(4,SeekOrigin.Current);
-			bf.Seek(16*16,SeekOrigin.Current);
+			stream.Seek(4,SeekOrigin.Current);
+			stream.Seek(16*16,SeekOrigin.Current);
 
-			if (FindElement(bf, "Sections") != 9)
+			if (FindElement(stream, "Sections") != 9)
 				return false;
 			{
 				byte[] type = new byte[1];
-				bf.Read(type, 0, 1);
+				stream.Read(type, 0, 1);
 
 				if (type[0] != 10)
 					return false;
 			}
 
-			nsections = ReadDWord(bf);
+			nsections = ReadDWord(stream);
 			while ((nsections) > 0)
 			{
 				byte[] y = new byte[1];
-				long save = bf.Position;
+				long save = stream.Position;
 
-				if (FindElement(bf, "Y") != 1)
+				if (FindElement(stream, "Y") != 1)
 					return false;
 
-				bf.Read(y, 0, 1);
-				bf.Seek(save, SeekOrigin.Begin);
+				stream.Read(y, 0, 1);
+				stream.Seek(save, SeekOrigin.Begin);
 
 				found = 0;
 
@@ -98,13 +98,13 @@ namespace AweEditor.Utilities
 				{
 					bool ret = false;
 					byte[] type = new byte[1];
-					bf.Read(type, 0, 1);
+					stream.Read(type, 0, 1);
 					if (type[0] == 0)
 						break;
-					length = ReadWord(bf);
+					length = ReadWord(stream);
 
 					byte[] name = new byte[length + 1];
-					bf.Read(name, 0, length);
+					stream.Read(name, 0, length);
 					name[length] = 0;
 					char[] temp = new char[length + 1];
 					for (int i = 0; i < temp.Length; i++)
@@ -118,19 +118,19 @@ namespace AweEditor.Utilities
 					{
 						found++;
 						ret = true;
-						length = ReadDWord(bf);
-						bf.Seek(length, SeekOrigin.Current);
+						length = ReadDWord(stream);
+						stream.Seek(length, SeekOrigin.Current);
 					}
 					if (string.Compare(thisName, "Blocks") == 0)
 					{
 						found++;
 						ret = true;
-						length = ReadDWord(bf);
-						bf.Read(buff, 16 * 16 * 16 * y[0], length);
+						length = ReadDWord(stream);
+						stream.Read(buff, 16 * 16 * 16 * y[0], length);
 					}
 
 					if (!ret)
-						SkipType(bf, type[0]);
+						SkipType(stream, type[0]);
 				}
 
 				nsections--;
@@ -139,165 +139,165 @@ namespace AweEditor.Utilities
 		}
 
 
-		private int ReadWord(MemoryStream bf)
+		private int ReadWord(MemoryStream stream)
 		{
 			byte[] buf = new byte[2];
-			bf.Read(buf, 0, 2);
+			stream.Read(buf, 0, 2);
 			return ((buf[0] << 8) | buf[1]);
 		}
 
-		private int ReadDWord(MemoryStream bf)
+		private int ReadDWord(MemoryStream stream)
 		{
 			byte[] buf = new byte[4];
-			bf.Read(buf, 0, 4);
+			stream.Read(buf, 0, 4);
 			return ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]);
 		}
 
-		private int FindElement(MemoryStream bf, string name)
+		private int FindElement(MemoryStream stream, string name)
 		{
 			while (true)
 			{
 				byte[] type = new byte[1];
-				bf.Read(type, 0, 1);
+				stream.Read(type, 0, 1);
 				if (type[0] == 0)
 					return 0;
 
-				if (Compare(bf, name))
+				if (Compare(stream, name))
 					return type[0];
-				SkipType(bf, type[0]);
+				SkipType(stream, type[0]);
 			}
 		}
 
 
-		private void SkipType(MemoryStream bf, byte type)
+		private void SkipType(MemoryStream stream, byte type)
 		{
 			int length;
 			switch (type)
 			{
 				case 1: //byte
-					bf.Seek(1, SeekOrigin.Current);
+					stream.Seek(1, SeekOrigin.Current);
 					break;
 				case 2: // short
-					bf.Seek(2, SeekOrigin.Current);
+					stream.Seek(2, SeekOrigin.Current);
 					break;
 				case 3: // int
-					bf.Seek(4, SeekOrigin.Current);
+					stream.Seek(4, SeekOrigin.Current);
 					break;
 				case 4: // long
-					bf.Seek(8, SeekOrigin.Current);
+					stream.Seek(8, SeekOrigin.Current);
 					break;
 				case 5: //float
-					bf.Seek(4, SeekOrigin.Current);
+					stream.Seek(4, SeekOrigin.Current);
 					break;
 				case 6: //double
-					bf.Seek(8, SeekOrigin.Current);
+					stream.Seek(8, SeekOrigin.Current);
 					break;
 				case 7: // byte array
-					length = ReadDWord(bf);
-					bf.Seek(length, SeekOrigin.Current);
+					length = ReadDWord(stream);
+					stream.Seek(length, SeekOrigin.Current);
 					break;
 				case 8://string
-					length = ReadWord(bf);
-					bf.Seek(length, SeekOrigin.Current);
+					length = ReadWord(stream);
+					stream.Seek(length, SeekOrigin.Current);
 					break;
 				case 9: //list
-					SkipList(bf);
+					SkipList(stream);
 					break;
 				case 10: //Compound
-					SkipCompound(bf);
+					SkipCompound(stream);
 					break;
 				case 11: // int Array
-					length = ReadDWord(bf);
-					bf.Seek(length * 4, SeekOrigin.Current);
+					length = ReadDWord(stream);
+					stream.Seek(length * 4, SeekOrigin.Current);
 					break;
 			}
 		}
 
 
-		private void SkipList(MemoryStream bf)
+		private void SkipList(MemoryStream stream)
 		{
 			int length;
 			byte[] type = new byte[1];
-			bf.Read(type, 0, 1);
-			length = ReadDWord(bf);
+			stream.Read(type, 0, 1);
+			length = ReadDWord(stream);
 			switch (type[0])
 			{
 				case 1: //byte
-					bf.Seek(length, SeekOrigin.Current);
+					stream.Seek(length, SeekOrigin.Current);
 					break;
 				case 2://short
-					bf.Seek(length * 2, SeekOrigin.Current);
+					stream.Seek(length * 2, SeekOrigin.Current);
 					break;
 				case 3://int
-					bf.Seek(length * 4, SeekOrigin.Current);
+					stream.Seek(length * 4, SeekOrigin.Current);
 					break;
 				case 4: //long
-					bf.Seek(length * 8, SeekOrigin.Current);
+					stream.Seek(length * 8, SeekOrigin.Current);
 					break;
 				case 5: //float
-					bf.Seek(length * 4, SeekOrigin.Current);
+					stream.Seek(length * 4, SeekOrigin.Current);
 					break;
 				case 6: //double
-					bf.Seek(length * 8, SeekOrigin.Current);
+					stream.Seek(length * 8, SeekOrigin.Current);
 					break;
 				case 7: // byte aray
 					for (int i = 0; i < length; i++)
 					{
-						int slength = ReadDWord(bf);
-						bf.Seek(slength, SeekOrigin.Current);
+						int slength = ReadDWord(stream);
+						stream.Seek(slength, SeekOrigin.Current);
 					}
 					break;
 				case 8://string
 					for (int i = 0; i < length; i++)
 					{
-						int slength = ReadWord(bf);
-						bf.Seek(slength, SeekOrigin.Current);
+						int slength = ReadWord(stream);
+						stream.Seek(slength, SeekOrigin.Current);
 					}
 					break;
 				case 9: //List
 					for (int i = 0; i < length; i++)
 					{
-						SkipList(bf);
+						SkipList(stream);
 					}
 					break;
 				case 10: //compound
 					for (int i = 0; i < length; i++)
 					{
-						SkipCompound(bf);
+						SkipCompound(stream);
 					}
 					break;
 				case 11: //int array
 					for (int i = 0; i < length; i++)
 					{
-						int slength = ReadDWord(bf);
-						bf.Seek(slength * 4, SeekOrigin.Current);
+						int slength = ReadDWord(stream);
+						stream.Seek(slength * 4, SeekOrigin.Current);
 					}
 					break;
 			}
 		}
 
-		private void SkipCompound(MemoryStream bf)
+		private void SkipCompound(MemoryStream stream)
 		{
 			int length;
 			byte[] type = new byte[1];
 			do
 			{
-				bf.Read(type, 0, 1);
+				stream.Read(type, 0, 1);
 				if (type[0] != 0)
 				{
-					length = ReadWord(bf);
-					bf.Seek(length, SeekOrigin.Current);
-					SkipType(bf, type[0]);
+					length = ReadWord(stream);
+					stream.Seek(length, SeekOrigin.Current);
+					SkipType(stream, type[0]);
 				}
 			} while (type[0] != 0);
 		}
 
-		private bool Compare(MemoryStream bf, string name)
+		private bool Compare(MemoryStream stream, string name)
 		{
-			int length = ReadWord(bf);
+			int length = ReadWord(stream);
 
 			byte[] nameB = new byte[length + 1];
-			bf.Read(nameB, 0, length);
+			stream.Read(nameB, 0, length);
 			nameB[length] = 0;
 			char[] temp = new char[length + 1];
 			for (int i = 0; i < temp.Length; i++)

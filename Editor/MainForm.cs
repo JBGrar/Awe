@@ -28,7 +28,7 @@ namespace AweEditor
     {
         ContentBuilder contentBuilder;
         ContentManager contentManager;
-
+		VoxelImporter voxelImporter;
 
         /// <summary>
         /// Constructs the main form.
@@ -41,6 +41,8 @@ namespace AweEditor
 
             contentManager = new ContentManager(modelViewerControl.Services,
                                                 contentBuilder.OutputDirectory);
+
+			voxelImporter = new VoxelImporter();
 
             /// Automatically bring up the "Load Model" dialog when we are first shown.
             ///this.Shown += OpenMenuClicked;
@@ -92,8 +94,59 @@ namespace AweEditor
         /// </summary>
         private void ImportVoxelTerrainMenuClicked(object sender, EventArgs e)
         {
+			OpenFileDialog fileDialog = new OpenFileDialog();
+
+			fileDialog.InitialDirectory = ContentPath();
+
+			fileDialog.Title = "Load Model";
+
+			fileDialog.Filter = "Model Files (*.fbx;*.x)|*.fbx;*.x|" +
+								"FBX Files (*.fbx)|*.fbx|" +
+								"X Files (*.x)|*.x|" +
+								"All Files (*.*)|*.*";
+
+			if (fileDialog.ShowDialog() == DialogResult.OK)
+			{
+				string modelName = fileDialog.FileName;
+
+				fileDialog.InitialDirectory = ContentPath();
+
+				fileDialog.Title = "Load Terrain";
+
+				fileDialog.Filter = "Region Files (*.mca;*.x)|*.mca;*.x|" +
+									"All Files (*.*)|*.*";
+
+				if (fileDialog.ShowDialog() == DialogResult.OK)
+				{
+					LoadTerrain(fileDialog.FileName, modelName);
+				}
+			}
             // TODO: Import the file
         }
+
+		private void LoadTerrain(string terrain, string modelName)
+		{
+			Cursor = Cursors.WaitCursor;
+			tabControl1.SelectedIndex = 3;
+
+			terrainViewerControl.Model = null;
+			contentManager.Unload();
+
+			contentBuilder.Clear();
+            contentBuilder.Add(modelName, "Model", null, "ModelProcessor");
+
+            // Build this new model data.
+            string buildError = contentBuilder.Build();
+
+			if (string.IsNullOrEmpty(buildError))
+			{
+				// If the build succeeded, use the ContentManager to
+				// load the temporary .xnb file that we just created.
+				terrainViewerControl.Model = contentManager.Load<Model>("Model");
+			}
+			Cursor = Cursors.Arrow;
+			//throw new NotImplementedException();
+		}
 
 
         /// <summary>
