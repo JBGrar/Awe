@@ -44,13 +44,7 @@ namespace AweEditor.Utilities.MarchingCubes
 				if (simple)
 				{
 					index = ProcessSlices(slice1, slice2);
-                    for (int x = 0; x < WORLD_WIDTH - 1; x++)
-                    {
-                        for (int y = 0; y < WORLD_HEIGHT - 1; y++)
-                        {
-                            ProcessIndex(mBuilder, index[x, y], x, y, z);
-                        }
-                    }
+					AddToMesh(mBuilder, index, z);
 				}
 				else
 				{
@@ -158,74 +152,295 @@ namespace AweEditor.Utilities.MarchingCubes
         /// <param name="z"></param>
 		private void ProcessIndex(MeshBuilder mBuilder, byte index, int x, int y, int z)
 		{
+			Vector3 e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12;
+			e1 = GetVertex(1, x, y, z);
+			e2 = GetVertex(2, x, y, z);
+			e3 = GetVertex(3, x, y, z);
+			e4 = GetVertex(4, x, y, z);
+			e5 = GetVertex(5, x, y, z);
+			e6 = GetVertex(6, x, y, z);
+			e7 = GetVertex(7, x, y, z);
+			e8 = GetVertex(8, x, y, z);
+			e9 = GetVertex(9, x, y, z);
+			e10 = GetVertex(10, x, y, z);
+			e11 = GetVertex(11, x, y, z);
+			e12 = GetVertex(12, x, y, z);
+
 			switch (index)
 			{
                 //v8v7v6v5 v4v3v2v1
 				#region 0-99
 				#region 0-9
 				case (0): //0000 0000
+					//Empty Cube, do nothing
 					break;
 				case(1): //0000 0001
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
 				case(2): //0000 0010
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
 					break;
 				case(3): //0000 0011
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
 					break;
 				case(4): //0000 0100
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case(5): //0000 0101
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case(6): //0000 0110
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
 					break;
 				case(7): //0000 0111
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case(8): //0000 1000
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
 					break;
 				case(9): //0000 1001
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
 				#endregion;
 				#region 10-19
 				case (10): //0000 1010
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
 					break;
 				case (11): //0000 1011
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case (12): //0000 1100
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case (13): //0000 1101
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
 					break;
 				case (14): //0000 1110
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case (15): //0000 1111
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
 				case (16): //0001 0000
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
-				case (17):
+				case (17): //0001 0001
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
 					break;
-				case (18):
+				case (18): //0001 0010
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
 					break;
-				case (19):
+				case (19): //0001 0011
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
 					break;
 				#endregion;
 				#region 20-29
-				case (20):
+				case (20): //0001 0100
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
 					break;
-				case (21):
+				case (21): //0001 0101
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
 					break;
-				case (22):
+				case (22): //0001 0110
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
-				case (23):
+				case (23): //0001 0111
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
 					break;
-				case (24):
+				case (24): //0001 1000
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
 					break;
-				case (25):
+				case (25): //0001 1001
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
 					break;
-				case (26):
+				case (26): //0001 1010
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
-				case (27):
+				case (27): //0001 1011
 					break;
-				case (28):
+				case (28): //0001 1100
 					break;
-				case (29):
+				case (29): //0001 1101
 					break;
 				#endregion;
 				#region 30-39
