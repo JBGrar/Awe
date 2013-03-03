@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
+using Microsoft.Xna.Framework;
 
 
 namespace AweEditor.Utilities.MarchingCubes
@@ -12,7 +13,7 @@ namespace AweEditor.Utilities.MarchingCubes
 		private int WORLD_WIDTH;
 		private int WORLD_LENGTH;
 		private int WORLD_HEIGHT;
-
+		
         public string MeshName { get; set; }
 
 		public MarchingCubesGenerator()
@@ -132,60 +133,58 @@ namespace AweEditor.Utilities.MarchingCubes
 		{
 			byte[,] indicies = meshIndicies;
 
-            mBuilder.AddTriangleVertex(mBuilder.CreatePosition());
-
 			for (int x = 0; x < WORLD_WIDTH - 1; x++)
 			{
 				for (int y = 0; y < WORLD_HEIGHT - 1; y++)
 				{
-					ProcessIndex(indicies[x, y], x, y, z);
+					ProcessIndex(mBuilder, indicies[x, y], x, y, z);
 				}
 			}
 
 			throw new NotImplementedException();
 		}
 
-		private void ProcessIndex(byte index, int x, int y, int z)
+		private void ProcessIndex(MeshBuilder mbuilder,byte index, int x, int y, int z)
 		{
 			switch (index)
 			{
 				#region 0-99
 				#region 0-9
-				case (0):
+				case (0): //0000 0000
 					break;
-				case(1):
+				case(1): //0000 0001
 					break;
-				case(2):
+				case(2): //0000 0010
 					break;
-				case(3):
+				case(3): //0000 0011
 					break;
-				case(4):
+				case(4): //0000 0100
 					break;
-				case(5):
+				case(5): //0000 0101
 					break;
-				case(6):
+				case(6): //0000 0110
 					break;
-				case(7):
+				case(7): //0000 0111
 					break;
-				case(8):
+				case(8): //0000 1000
 					break;
-				case(9):
+				case(9): //0000 1001
 					break;
 				#endregion;
 				#region 10-19
-				case (10):
+				case (10): //0000 1010
 					break;
-				case (11):
+				case (11): //0000 1011
 					break;
-				case (12):
+				case (12): //0000 1100
 					break;
-				case (13):
+				case (13): //0000 1101
 					break;
-				case (14):
+				case (14): //0000 1110
 					break;
-				case (15):
+				case (15): //0000 1111
 					break;
-				case (16):
+				case (16): //0001 0000
 					break;
 				case (17):
 					break;
