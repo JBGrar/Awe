@@ -10,17 +10,292 @@ namespace AweEditor.Utilities.MarchingCubes
 {
 	class MarchingCubesGenerator
 	{
+		/// <summary>
+		/// Look up table taken from http://paulbourke.net/geometry/polygonise/
+		/// </summary>
+		#region Look up table
+
+		const int[,] TRI_TABLE = 
+			{{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 8, 3, 9, 8, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 2, 10, 0, 2, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{2, 8, 3, 2, 10, 8, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1},
+			{3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 11, 2, 8, 11, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 9, 0, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 11, 2, 1, 9, 11, 9, 8, 11, -1, -1, -1, -1, -1, -1, -1},
+			{3, 10, 1, 11, 10, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 10, 1, 0, 8, 10, 8, 11, 10, -1, -1, -1, -1, -1, -1, -1},
+			{3, 9, 0, 3, 11, 9, 11, 10, 9, -1, -1, -1, -1, -1, -1, -1},
+			{9, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 3, 0, 7, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 1, 9, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 1, 9, 4, 7, 1, 7, 3, 1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 4, 7, 3, 0, 4, 1, 2, 10, -1, -1, -1, -1, -1, -1, -1},
+			{9, 2, 10, 9, 0, 2, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1},
+			{2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4, -1, -1, -1, -1},
+			{8, 4, 7, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{11, 4, 7, 11, 2, 4, 2, 0, 4, -1, -1, -1, -1, -1, -1, -1},
+			{9, 0, 1, 8, 4, 7, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1},
+			{4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1, -1, -1, -1, -1},
+			{3, 10, 1, 3, 11, 10, 7, 8, 4, -1, -1, -1, -1, -1, -1, -1},
+			{1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4, -1, -1, -1, -1},
+			{4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3, -1, -1, -1, -1},
+			{4, 7, 11, 4, 11, 9, 9, 11, 10, -1, -1, -1, -1, -1, -1, -1},
+			{9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 5, 4, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 5, 4, 1, 5, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{8, 5, 4, 8, 3, 5, 3, 1, 5, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 0, 8, 1, 2, 10, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1},
+			{5, 2, 10, 5, 4, 2, 4, 0, 2, -1, -1, -1, -1, -1, -1, -1},
+			{2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8, -1, -1, -1, -1},
+			{9, 5, 4, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 11, 2, 0, 8, 11, 4, 9, 5, -1, -1, -1, -1, -1, -1, -1},
+			{0, 5, 4, 0, 1, 5, 2, 3, 11, -1, -1, -1, -1, -1, -1, -1},
+			{2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5, -1, -1, -1, -1},
+			{10, 3, 11, 10, 1, 3, 9, 5, 4, -1, -1, -1, -1, -1, -1, -1},
+			{4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10, -1, -1, -1, -1},
+			{5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3, -1, -1, -1, -1},
+			{5, 4, 8, 5, 8, 10, 10, 8, 11, -1, -1, -1, -1, -1, -1, -1},
+			{9, 7, 8, 5, 7, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 3, 0, 9, 5, 3, 5, 7, 3, -1, -1, -1, -1, -1, -1, -1},
+			{0, 7, 8, 0, 1, 7, 1, 5, 7, -1, -1, -1, -1, -1, -1, -1},
+			{1, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 7, 8, 9, 5, 7, 10, 1, 2, -1, -1, -1, -1, -1, -1, -1},
+			{10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3, -1, -1, -1, -1},
+			{8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2, -1, -1, -1, -1},
+			{2, 10, 5, 2, 5, 3, 3, 5, 7, -1, -1, -1, -1, -1, -1, -1},
+			{7, 9, 5, 7, 8, 9, 3, 11, 2, -1, -1, -1, -1, -1, -1, -1},
+			{9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11, -1, -1, -1, -1},
+			{2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7, -1, -1, -1, -1},
+			{11, 2, 1, 11, 1, 7, 7, 1, 5, -1, -1, -1, -1, -1, -1, -1},
+			{9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11, -1, -1, -1, -1},
+			{5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0, -1},
+			{11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0, -1},
+			{11, 10, 5, 7, 11, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 0, 1, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 8, 3, 1, 9, 8, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1},
+			{1, 6, 5, 2, 6, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 6, 5, 1, 2, 6, 3, 0, 8, -1, -1, -1, -1, -1, -1, -1},
+			{9, 6, 5, 9, 0, 6, 0, 2, 6, -1, -1, -1, -1, -1, -1, -1},
+			{5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8, -1, -1, -1, -1},
+			{2, 3, 11, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{11, 0, 8, 11, 2, 0, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1},
+			{0, 1, 9, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1, -1, -1, -1},
+			{5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11, -1, -1, -1, -1},
+			{6, 3, 11, 6, 5, 3, 5, 1, 3, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6, -1, -1, -1, -1},
+			{3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9, -1, -1, -1, -1},
+			{6, 5, 9, 6, 9, 11, 11, 9, 8, -1, -1, -1, -1, -1, -1, -1},
+			{5, 10, 6, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 3, 0, 4, 7, 3, 6, 5, 10, -1, -1, -1, -1, -1, -1, -1},
+			{1, 9, 0, 5, 10, 6, 8, 4, 7, -1, -1, -1, -1, -1, -1, -1},
+			{10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4, -1, -1, -1, -1},
+			{6, 1, 2, 6, 5, 1, 4, 7, 8, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7, -1, -1, -1, -1},
+			{8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6, -1, -1, -1, -1},
+			{7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9, -1},
+			{3, 11, 2, 7, 8, 4, 10, 6, 5, -1, -1, -1, -1, -1, -1, -1},
+			{5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11, -1, -1, -1, -1},
+			{0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6, -1, -1, -1, -1},
+			{9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6, -1},
+			{8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6, -1, -1, -1, -1},
+			{5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11, -1},
+			{0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7, -1},
+			{6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9, -1, -1, -1, -1},
+			{10, 4, 9, 6, 4, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 10, 6, 4, 9, 10, 0, 8, 3, -1, -1, -1, -1, -1, -1, -1},
+			{10, 0, 1, 10, 6, 0, 6, 4, 0, -1, -1, -1, -1, -1, -1, -1},
+			{8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10, -1, -1, -1, -1},
+			{1, 4, 9, 1, 2, 4, 2, 6, 4, -1, -1, -1, -1, -1, -1, -1},
+			{3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4, -1, -1, -1, -1},
+			{0, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{8, 3, 2, 8, 2, 4, 4, 2, 6, -1, -1, -1, -1, -1, -1, -1},
+			{10, 4, 9, 10, 6, 4, 11, 2, 3, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6, -1, -1, -1, -1},
+			{3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10, -1, -1, -1, -1},
+			{6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1, -1},
+			{9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3, -1, -1, -1, -1},
+			{8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1, -1},
+			{3, 11, 6, 3, 6, 0, 0, 6, 4, -1, -1, -1, -1, -1, -1, -1},
+			{6, 4, 8, 11, 6, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{7, 10, 6, 7, 8, 10, 8, 9, 10, -1, -1, -1, -1, -1, -1, -1},
+			{0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10, -1, -1, -1, -1},
+			{10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0, -1, -1, -1, -1},
+			{10, 6, 7, 10, 7, 1, 1, 7, 3, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7, -1, -1, -1, -1},
+			{2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9, -1},
+			{7, 8, 0, 7, 0, 6, 6, 0, 2, -1, -1, -1, -1, -1, -1, -1},
+			{7, 3, 2, 6, 7, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7, -1, -1, -1, -1},
+			{2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7, -1},
+			{1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11, -1},
+			{11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1, -1, -1, -1, -1},
+			{8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6, -1},
+			{0, 9, 1, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0, -1, -1, -1, -1},
+			{7, 11, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 0, 8, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 1, 9, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{8, 1, 9, 8, 3, 1, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1},
+			{10, 1, 2, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, 3, 0, 8, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1},
+			{2, 9, 0, 2, 10, 9, 6, 11, 7, -1, -1, -1, -1, -1, -1, -1},
+			{6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8, -1, -1, -1, -1},
+			{7, 2, 3, 6, 2, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{7, 0, 8, 7, 6, 0, 6, 2, 0, -1, -1, -1, -1, -1, -1, -1},
+			{2, 7, 6, 2, 3, 7, 0, 1, 9, -1, -1, -1, -1, -1, -1, -1},
+			{1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6, -1, -1, -1, -1},
+			{10, 7, 6, 10, 1, 7, 1, 3, 7, -1, -1, -1, -1, -1, -1, -1},
+			{10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8, -1, -1, -1, -1},
+			{0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7, -1, -1, -1, -1},
+			{7, 6, 10, 7, 10, 8, 8, 10, 9, -1, -1, -1, -1, -1, -1, -1},
+			{6, 8, 4, 11, 8, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 6, 11, 3, 0, 6, 0, 4, 6, -1, -1, -1, -1, -1, -1, -1},
+			{8, 6, 11, 8, 4, 6, 9, 0, 1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6, -1, -1, -1, -1},
+			{6, 8, 4, 6, 11, 8, 2, 10, 1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6, -1, -1, -1, -1},
+			{4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9, -1, -1, -1, -1},
+			{10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3, -1},
+			{8, 2, 3, 8, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1},
+			{0, 4, 2, 4, 6, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8, -1, -1, -1, -1},
+			{1, 9, 4, 1, 4, 2, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1},
+			{8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1, -1, -1, -1, -1},
+			{10, 1, 0, 10, 0, 6, 6, 0, 4, -1, -1, -1, -1, -1, -1, -1},
+			{4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3, -1},
+			{10, 9, 4, 6, 10, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 9, 5, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, 4, 9, 5, 11, 7, 6, -1, -1, -1, -1, -1, -1, -1},
+			{5, 0, 1, 5, 4, 0, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1},
+			{11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5, -1, -1, -1, -1},
+			{9, 5, 4, 10, 1, 2, 7, 6, 11, -1, -1, -1, -1, -1, -1, -1},
+			{6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5, -1, -1, -1, -1},
+			{7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2, -1, -1, -1, -1},
+			{3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6, -1},
+			{7, 2, 3, 7, 6, 2, 5, 4, 9, -1, -1, -1, -1, -1, -1, -1},
+			{9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7, -1, -1, -1, -1},
+			{3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0, -1, -1, -1, -1},
+			{6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8, -1},
+			{9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7, -1, -1, -1, -1},
+			{1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4, -1},
+			{4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10, -1},
+			{7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10, -1, -1, -1, -1},
+			{6, 9, 5, 6, 11, 9, 11, 8, 9, -1, -1, -1, -1, -1, -1, -1},
+			{3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5, -1, -1, -1, -1},
+			{0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11, -1, -1, -1, -1},
+			{6, 11, 3, 6, 3, 5, 5, 3, 1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6, -1, -1, -1, -1},
+			{0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10, -1},
+			{11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5, -1},
+			{6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3, -1, -1, -1, -1},
+			{5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2, -1, -1, -1, -1},
+			{9, 5, 6, 9, 6, 0, 0, 6, 2, -1, -1, -1, -1, -1, -1, -1},
+			{1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8, -1},
+			{1, 5, 6, 2, 1, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6, -1},
+			{10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0, -1, -1, -1, -1},
+			{0, 3, 8, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{10, 5, 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{11, 5, 10, 7, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{11, 5, 10, 11, 7, 5, 8, 3, 0, -1, -1, -1, -1, -1, -1, -1},
+			{5, 11, 7, 5, 10, 11, 1, 9, 0, -1, -1, -1, -1, -1, -1, -1},
+			{10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1, -1, -1, -1, -1},
+			{11, 1, 2, 11, 7, 1, 7, 5, 1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11, -1, -1, -1, -1},
+			{9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7, -1, -1, -1, -1},
+			{7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2, -1},
+			{2, 5, 10, 2, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1},
+			{8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5, -1, -1, -1, -1},
+			{9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2, -1, -1, -1, -1},
+			{9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2, -1},
+			{1, 3, 5, 3, 7, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 7, 0, 7, 1, 1, 7, 5, -1, -1, -1, -1, -1, -1, -1},
+			{9, 0, 3, 9, 3, 5, 5, 3, 7, -1, -1, -1, -1, -1, -1, -1},
+			{9, 8, 7, 5, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{5, 8, 4, 5, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1},
+			{5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0, -1, -1, -1, -1},
+			{0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5, -1, -1, -1, -1},
+			{10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4, -1},
+			{2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8, -1, -1, -1, -1},
+			{0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11, -1},
+			{0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5, -1},
+			{9, 4, 5, 2, 11, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4, -1, -1, -1, -1},
+			{5, 10, 2, 5, 2, 4, 4, 2, 0, -1, -1, -1, -1, -1, -1, -1},
+			{3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9, -1},
+			{5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2, -1, -1, -1, -1},
+			{8, 4, 5, 8, 5, 3, 3, 5, 1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 4, 5, 1, 0, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5, -1, -1, -1, -1},
+			{9, 4, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 11, 7, 4, 9, 11, 9, 10, 11, -1, -1, -1, -1, -1, -1, -1},
+			{0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11, -1, -1, -1, -1},
+			{1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11, -1, -1, -1, -1},
+			{3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4, -1},
+			{4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2, -1, -1, -1, -1},
+			{9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3, -1},
+			{11, 7, 4, 11, 4, 2, 2, 4, 0, -1, -1, -1, -1, -1, -1, -1},
+			{11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4, -1, -1, -1, -1},
+			{2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9, -1, -1, -1, -1},
+			{9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7, -1},
+			{3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10, -1},
+			{1, 10, 2, 8, 7, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 9, 1, 4, 1, 7, 7, 1, 3, -1, -1, -1, -1, -1, -1, -1},
+			{4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1, -1, -1, -1, -1},
+			{4, 0, 3, 7, 4, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{4, 8, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{9, 10, 8, 10, 11, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 0, 9, 3, 9, 11, 11, 9, 10, -1, -1, -1, -1, -1, -1, -1},
+			{0, 1, 10, 0, 10, 8, 8, 10, 11, -1, -1, -1, -1, -1, -1, -1},
+			{3, 1, 10, 11, 3, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 2, 11, 1, 11, 9, 9, 11, 8, -1, -1, -1, -1, -1, -1, -1},
+			{3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9, -1, -1, -1, -1},
+			{0, 2, 11, 8, 0, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{3, 2, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{2, 3, 8, 2, 8, 10, 10, 8, 9, -1, -1, -1, -1, -1, -1, -1},
+			{9, 10, 2, 0, 9, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8, -1, -1, -1, -1},
+			{1, 10, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{1, 3, 8, 9, 1, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+			{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+		#endregion
 		private int WORLD_WIDTH;
 		private int WORLD_LENGTH;
 		private int WORLD_HEIGHT;
 		
         public string MeshName { get; set; }
 
+		/// <summary>
+		/// Default Constructor
+		/// </summary>
 		public MarchingCubesGenerator()
 			: this(512, 256, 512, "Default")
 		{
 		}
 
+		/// <summary>
+		/// Constructors taking world dimensions and a meshname
+		/// </summary>
+		/// <param name="x">world width</param>
+		/// <param name="y">world height</param>
+		/// <param name="z">world length</param>
+		/// <param name="meshName">mesh name</param>
 		public MarchingCubesGenerator(int x, int y, int z, string meshName)
 		{
 			WORLD_WIDTH = x;
@@ -29,6 +304,12 @@ namespace AweEditor.Utilities.MarchingCubes
             MeshName = meshName;
 		}
 
+		/// <summary>
+		/// Takes in a list of blocks and whether or not the mesh will be textured
+		/// </summary>
+		/// <param name="blockList">List of blocks</param>
+		/// <param name="simple">Textured or not</param>
+		/// <returns>a mesh generated from the list of blockData</returns>
 		public MeshContent March(List<BlockData> blockList, bool simple)
 		{
             MeshBuilder mBuilder = MeshBuilder.StartMesh(MeshName);
@@ -43,7 +324,7 @@ namespace AweEditor.Utilities.MarchingCubes
 			{
 				if (simple)
 				{
-					index = ProcessSlices(slice1, slice2);
+					index = ProcessSlicesV2(slice1, slice2);
 					AddToMesh(mBuilder, index, z);
 				}
 				else
@@ -61,6 +342,13 @@ namespace AweEditor.Utilities.MarchingCubes
             return mBuilder.FinishMesh();
 		}
 
+		/// <summary>
+		/// Gets a slice of the world from the blocklist at the given z coordinate,
+		/// </summary>
+		/// <param name="blockList">list of block data in the world</param>
+		/// <param name="z">z coordinate of the slice in the world</param>
+		/// <param name="simple">whether or not the mesh will be textured</param>
+		/// <returns>a 2 dimensional array that represents a X by Y slice of the world at the given z coordinate</returns>
 		private byte[,] GetSlice(List<BlockData> blockList, int z, bool simple)
 		{
 			if (z > WORLD_LENGTH)
@@ -81,10 +369,144 @@ namespace AweEditor.Utilities.MarchingCubes
 			return slice;
 		}
 
+		/// <summary>
+		/// Generates an array of byte indicies from the 2 given slices
+		/// </summary>
+		/// <param name="slice1">the first slice</param>
+		/// <param name="slice2">the second slice</param>
+		/// <returns>an array of byte indicies based on the 2 slices</returns>
+		private byte[,] ProcessSlicesV2(byte[,] slice1, byte[,] slice2)
+		{
+			byte[,] index = new byte[WORLD_WIDTH - 1, WORLD_HEIGHT - 1];
+			byte v0, v1, v2, v3, v4, v5, v6, v7;
+
+			for (int y = 0; y < WORLD_HEIGHT - 1; y++)
+			{
+				for (int x = 0; x < WORLD_WIDTH - 1; x++)
+				{
+					if (slice1 == null)
+					{
+						v0 = 0;
+						v1 = 0;
+						v2 = slice2[x + 1, y + 1];
+						v3 = slice2[x, y + 1];
+						v4 = 0;
+						v5 = 0;
+						v6 = slice2[x + 1, y];
+						v7 = slice2[x, y];
+					}
+					else if (slice2 == null)
+					{
+						v0 = slice1[x, y + 1];
+						v1 = slice1[x + 1, y + 1];
+						v2 = 0;
+						v3 = 0;
+						v4 = slice1[x, y];
+						v5 = slice1[x + 1, y];
+						v6 = 0;
+						v7 = 0;
+					}
+					else
+					{
+						v0 = slice1[x, y + 1];
+						v1 = slice1[x + 1, y + 1];
+						v2 = slice2[x + 1, y + 1];
+						v3 = slice2[x, y + 1];
+						v4 = slice1[x, y];
+						v5 = slice1[x + 1, y];
+						v6 = slice2[x + 1, y];
+						v7 = slice2[x, y];
+					}
+
+					index[x, y] = (byte)((v0) | (v1 << 1) | (v2 << 2) | (v3 << 3) | (v4 << 4) | (v5 << 5) | (v6 << 6) | (v7 << 7));
+				}
+			}
+			return index;
+		}
+
+		/// <summary>
+		/// Adds the given byte indicies to the meshbuilder at the given z coordinate
+		/// </summary>
+		/// <param name="mBuilder">the meshBuilder</param>
+		/// <param name="meshIndicies">the array of byte indicies</param>
+		/// <param name="z">the z coordinate</param>
+		private void AddToMesh(MeshBuilder mBuilder, byte[,] meshIndicies,int z)
+		{
+			byte[,] indicies = meshIndicies;
+
+			for (int x = 0; x < WORLD_WIDTH - 1; x++)
+			{
+				for (int y = 0; y < WORLD_HEIGHT - 1; y++)
+				{
+					ProcessIndex2(mBuilder, indicies[x, y], x, y, z);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adds triangles given by the index to the meshbuilder at the given x,y,z coordinates
+		/// </summary>
+		/// <param name="mBuilder">the MeshBuilder</param>
+		/// <param name="index">the byte index</param>
+		/// <param name="x">the x coordinate</param>
+		/// <param name="y">the y coordinate</param>
+		/// <param name="z">the z coordinate</param>
+		private void ProcessIndex2(MeshBuilder mBuilder, byte index, int x, int y, int z)
+		{
+			for (int i = 0; TRI_TABLE[index, i] != -1; i += 3)
+			{
+				mBuilder.AddTriangleVertex(mBuilder.CreatePosition(GetVertex2(TRI_TABLE[index, i], x, y, z)));
+				mBuilder.AddTriangleVertex(mBuilder.CreatePosition(GetVertex2(TRI_TABLE[index, i + 1], x, y, z)));
+				mBuilder.AddTriangleVertex(mBuilder.CreatePosition(GetVertex2(TRI_TABLE[index, i + 2], x, y, z)));
+			}
+		}
+
+		/// <summary>
+		/// Gets a vertex position from the given vertex number, and its x,y,z coordinate
+		/// </summary>
+		/// <param name="vertex">the vertex number</param>
+		/// <param name="x">x coordinate</param>
+		/// <param name="y">y coordinate</param>
+		/// <param name="z">z coordinate</param>
+		/// <returns>Vector position</returns>
+		private Vector3 GetVertex2(int vertex, int x, int y, int z)
+		{
+			switch (vertex)
+			{
+				case 0:
+					return new Vector3(2 * x + 1, 2 * y + 2, 2 * z);
+				case 1:
+					return new Vector3(2 * x + 2, 2 * y + 2, 2 * z + 1);
+				case 2:
+					return new Vector3(2 * x + 1, 2 * y + 2, 2 * z + 2);
+				case 3:
+					return new Vector3(2 * x, 2 * y + 2, 2 * z + 1);
+				case 4:
+					return new Vector3(2 * x + 1, 2 * y, 2 * z);
+				case 5:
+					return new Vector3(2 * x + 2, 2 * y, 2 * z + 1);
+				case 6:
+					return new Vector3(2 * x + 1, 2 * y, 2 * z + 2);
+				case 7:
+					return new Vector3(2 * x, 2 * y, 2 * z + 1);
+				case 8:
+					return new Vector3(2 * x, 2 * y + 1, 2 * z);
+				case 9:
+					return new Vector3(2 * x + 2, 2 * y+1, 2 * z);
+				case 10:
+					return new Vector3(2 * x + 2, 2 * y + 1, 2 * z + 2);
+				case 11:
+					return new Vector3(2 * x, 2 * y + 1, 2 * z + 2);
+				default:
+					throw new Exception("Unknown vertex");
+			}
+		}
+
+		#region Non-working Code
 		private byte[,] ProcessSlices(byte[,] slice1, byte[,] slice2)
 		{
 			byte[,] index = new byte[WORLD_WIDTH - 1, WORLD_HEIGHT - 1];
-			byte v1,v2,v3,v4,v5,v6,v7,v8;
+			byte v1, v2, v3, v4, v5, v6, v7, v8;
 
 			for (int y = 0; y < WORLD_HEIGHT - 1; y++)
 			{
@@ -101,7 +523,7 @@ namespace AweEditor.Utilities.MarchingCubes
 						v7 = slice2[x + 1, y + 1];
 						v8 = slice2[x, y + 1];
 					}
-					else if (slice2 ==null)
+					else if (slice2 == null)
 					{
 						v1 = slice1[x, y];
 						v2 = slice1[x + 1, y];
@@ -129,27 +551,15 @@ namespace AweEditor.Utilities.MarchingCubes
 			return index;
 		}
 
-		private void AddToMesh(MeshBuilder mBuilder, byte[,] meshIndicies,int z)
-		{
-			byte[,] indicies = meshIndicies;
 
-			for (int x = 0; x < WORLD_WIDTH - 1; x++)
-			{
-				for (int y = 0; y < WORLD_HEIGHT - 1; y++)
-				{
-					ProcessIndex(mBuilder, indicies[x, y], x, y, z);
-				}
-			}
-		}
-
-        /// <summary>
-        /// Adds triangle verticies to the MeshBuilder based on the index given.
-        /// </summary>
-        /// <param name="mBuilder"></param>
-        /// <param name="index"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
+		/// <summary>
+		/// Adds triangle verticies to the MeshBuilder based on the index given.
+		/// </summary>
+		/// <param name="mBuilder"></param>
+		/// <param name="index"></param>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="z"></param>
 		private void ProcessIndex(MeshBuilder mBuilder, byte index, int x, int y, int z)
 		{
 			Vector3 e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12;
@@ -437,32 +847,73 @@ namespace AweEditor.Utilities.MarchingCubes
 					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
 				case (27): //0001 1011
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e6));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e3));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
 					break;
 				case (28): //0001 1100
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e4));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e5));
 					break;
 				case (29): //0001 1101
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e12));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e7));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e8));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e9));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e2));
+					mBuilder.AddTriangleVertex(mBuilder.CreatePosition(e1));
 					break;
 				#endregion;
 				#region 30-39
-				case (30):
+				case (30): //0001 1110
 					break;
-				case (31):
+				case (31): //0001 1111
 					break;
-				case (32):
+				case (32): //0010 0000
 					break;
-				case (33):
+				case (33): //0010 0001
 					break;
-				case (34):
+				case (34): //0010 0010
 					break;
-				case (35):
+				case (35): //0010 0011
 					break;
-				case (36):
+				case (36): //0010 0100
+					break; 
+				case (37): //0010 0101
 					break;
-				case (37):
+				case (38): //0010 0110
 					break;
-				case (38):
-					break;
-				case (39):
+				case (39): //0010 0111
 					break;
 				#endregion;
 				#region 40-49
@@ -1093,6 +1544,7 @@ namespace AweEditor.Utilities.MarchingCubes
 			throw new NotImplementedException();
 		}
 	}
+		#endregion
 
 	class BlockData
 	{
